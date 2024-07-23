@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:yeotaskin/utilities/app_fonts.dart';
 import 'package:yeotaskin/view/incentive/show_video_screen.dart';
-import '../../models/home_model.dart';
 import '../../utilities/app_colors.dart';
 
 class IncentiveScreen extends StatefulWidget {
@@ -14,8 +13,6 @@ class IncentiveScreen extends StatefulWidget {
 }
 
 class _IncentiveScreenState extends State<IncentiveScreen> {
-
-  HomeModel? _homeModel;
   @override
   void initState() {
     // TODO: implement initState
@@ -39,7 +36,7 @@ class _IncentiveScreenState extends State<IncentiveScreen> {
           ),
         ),
       ),
-      body: _homeModel!.teamSales! <= 400000 ? Container() :  VideoScreen(),
+      body: VideoScreen(),
     );
   }
 }

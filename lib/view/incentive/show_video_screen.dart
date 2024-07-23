@@ -492,7 +492,8 @@ class _MyProgressBarState extends State<MyProgressBar> {
             child: AnimatedContainer(
               height: 120,
               decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                color: _homeModel!.teamSales! < 40000 ? Colors.grey : null,
+                  gradient: _homeModel!.teamSales! < 40000 ? null :  const LinearGradient(
                     colors: [AppColors.accent, AppColors.topLevelColor],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
