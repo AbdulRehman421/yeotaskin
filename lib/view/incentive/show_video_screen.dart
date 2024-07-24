@@ -27,6 +27,7 @@ class _VideoScreenState extends State<VideoScreen> {
 
   bool _isVideoInitialized = false;
   bool salesLoading = false;
+  bool salesLoadings = true;
   List teamSalesList = [];
   List<String> topUplineList = [];
   List upline = [];
@@ -41,11 +42,33 @@ class _VideoScreenState extends State<VideoScreen> {
   void setLoading(bool status) {
     if (mounted) {
       setState(() {
-        salesLoading = status;
+        loadingHome = status;
       });
     }
   }
 
+  HomeModel? homeModel;
+  bool loadingHome = false;
+  Future<void> loadHome() async {
+    setLoading(true);
+    String? token = await UserProfileManager().getUserToken();
+    try {
+      final response = await http.get(
+          Uri.parse("${URLs.baseURL}${URLs.getHomeURL}"),
+          headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200 &&
+          jsonDecode(response.body)['success'] == true) {
+        debugPrint("home loaded: ${jsonDecode(response.body)}");
+        homeModel = HomeModel.fromJson(jsonDecode(response.body)['data']);
+      } else {
+        debugPrint("loadHome(): error");
+      }
+    } catch (e) {
+      debugPrint("loadHome(): $e");
+    }
+    setLoading(false);
+  }
   Future<void> getTeamSales() async {
     setLoading(true);
     ProfileModel profile = UserProfileManager().profile;
@@ -177,6 +200,7 @@ class _VideoScreenState extends State<VideoScreen> {
   @override
   void initState() {
     super.initState();
+    loadHome();
     _controller = VideoPlayerController.asset('assets/videos/video.mp4')
       ..initialize().then((_) {
         if (mounted) {
@@ -203,68 +227,83 @@ class _VideoScreenState extends State<VideoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('team length ${teamSalesList.length}');
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
-      body: Center(
-        child: _isVideoInitialized
-            ? SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Stack(
-                      children: [
-                        AspectRatio(
-                          aspectRatio: 9 / 16,
-                          child: VideoPlayer(_controller),
+      body: Stack(
+        children: [
+          Center(
+            child: _isVideoInitialized
+                ? SingleChildScrollView(
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: VideoPlayer(_controller),
+                      ),
+                      const MyProgressBar(),
+                      const Positioned(
+                        top: 465,
+                        left: 110,
+                        child: Text(
+                          "Team Members",
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: AppFonts.optima,
+                              color: AppColors.primaryColor),
                         ),
-                        const MyProgressBar(),
-                        const Positioned(
-                          top: 450,
-                          left: 110,
-                          child: Text(
-                            "Team Members",
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: AppFonts.optima,
-                                color: AppColors.primaryColor),
+                      ),
+                      !salesLoading
+                          ? teamSalesList.isNotEmpty
+                          ? Positioned(
+                        top: 500,
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width,
+                          height: 200,
+                          child: TeamList(
+                            data: teamSalesList.isNotEmpty
+                                ? names
+                                : [],
+                            scrollController: _scrollController,
                           ),
                         ),
-                        !salesLoading
-                            ? teamSalesList.isNotEmpty
-                                ? Positioned(
-                                    top: 500,
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width,
-                                      height: 200,
-                                      child: TeamList(
-                                        data: teamSalesList.isNotEmpty
-                                            ? names
-                                            : [],
-                                        scrollController: _scrollController,
-                                      ),
-                                    ),
-                                  )
-                                : const Positioned(
-                                    left: 75,
-                                    top: 500,
-                                    child: Text(
-                                        "You are not eligible to enjoy incentive!"),
-                                  )
-                            : const Positioned(
-                                top: 500,
-                                left: 110,
-                                child: Text("Loading Team please wait..."),
-                              ),
-                      ],
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                  ],
+                      )
+                          : const Positioned(
+                        left: 75,
+                        top: 500,
+                        child: Text(
+                            "You are not eligible to enjoy incentive!"),
+                      )
+                          : const Positioned(
+                        top: 500,
+                        left: 110,
+                        child: Text("Loading Team please wait..."),
+                      ),
+                    ],
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                ],
+              ),
+            )
+                : const CircularProgressIndicator(),
+          ),
+          if (homeModel!.teamSales! < 40000)
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () {},
+                child: Container(
+                  color: Colors.black.withOpacity(0.7),
+                  child: MyProgressBarNew(),
                 ),
-              )
-            : const CircularProgressIndicator(),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -404,6 +443,148 @@ class _VideoScreenState extends State<VideoScreen> {
 //   }
 // }
 
+class MyProgressBarNew extends StatefulWidget {
+  const MyProgressBarNew({super.key});
+
+  @override
+  State<MyProgressBarNew> createState() => _MyProgressBarNewState();
+}
+
+class _MyProgressBarNewState extends State<MyProgressBarNew> {
+  int currentLevel = 0;
+  List<bool> levelReached = [false, false, false];
+  HomeModel? _homeModel;
+  bool loadingHome = false;
+  Color borderColor = AppColors.primaryColor;
+  Timer? _timer = Timer(const Duration(milliseconds: 500), () {});
+
+  void setLoading(bool status) {
+    if (mounted) {
+      setState(() {
+        loadingHome = status;
+      });
+    }
+  }
+
+  Future<void> loadHome() async {
+    setLoading(true);
+    String? token = await UserProfileManager().getUserToken();
+    try {
+      final response = await http.get(
+          Uri.parse("${URLs.baseURL}${URLs.getHomeURL}"),
+          headers: {"Authorization": "Bearer $token"});
+
+      if (response.statusCode == 200 &&
+          jsonDecode(response.body)['success'] == true) {
+        debugPrint("home loaded: ${jsonDecode(response.body)}");
+        _homeModel = HomeModel.fromJson(jsonDecode(response.body)['data']);
+      } else {
+        debugPrint("loadHome(): error");
+      }
+    } catch (e) {
+      debugPrint("loadHome(): $e");
+    }
+    setLoading(false);
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
+      if (mounted) {
+        setState(() {
+          borderColor = borderColor == Colors.white54
+              ? AppColors.primaryColor
+              : Colors.white54;
+        });
+      }
+    });
+    loadHome();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+
+    _timer?.cancel();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_homeModel != null && _homeModel!.teamSales != null) {
+      levelReached[0] = _homeModel!.teamSales! >= 45000 ? false : false;
+      levelReached[1] = _homeModel!.teamSales! >= 65000 ? false : false;
+      levelReached[2] = _homeModel!.teamSales! >= 100000 ? false : false;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox( height: 10,),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 200,left: 20),
+              child: Row(
+                children: [
+                  LevelCircle(level: 1, reached: levelReached[0]),
+                  SizedBox(width: 10,),
+                  Container(
+                    padding:  EdgeInsets.all(3),
+                    color: AppColors.threeLevelColor,
+                    child: Text('Team Sales reached 40k',style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold
+                    ),),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 50,left: 20),
+              child: Row(
+                children: [
+                  LevelCircle(level: 2, reached: levelReached[1]),
+                  SizedBox(width: 10,),
+                  Container(
+                    padding:  EdgeInsets.all(3),
+                    color: AppColors.threeLevelColor,
+                    child: Text('At least 5 person in a team',style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                    ),),
+                  )
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 50,left: 20),
+              child: Row(
+                children: [
+                  LevelCircle(level: 3, reached: levelReached[2]),
+                  SizedBox(width: 10,),
+                  Container(
+                    padding:  EdgeInsets.all(3),
+                    color: AppColors.threeLevelColor,
+                    child: Text('Perform group training/ 1 vs 1',style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold
+                    ),),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class MyProgressBar extends StatefulWidget {
   const MyProgressBar({super.key});
 
@@ -492,14 +673,14 @@ class _MyProgressBarState extends State<MyProgressBar> {
             child: AnimatedContainer(
               height: 120,
               decoration: BoxDecoration(
-                color: _homeModel!.teamSales! < 40000 ? Colors.grey : null,
+                  color: _homeModel!.teamSales! < 40000 ? Colors.grey : null,
                   gradient: _homeModel!.teamSales! < 40000 ? null :  const LinearGradient(
                     colors: [AppColors.accent, AppColors.topLevelColor],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                   borderRadius:
-                      const BorderRadiusDirectional.all(Radius.circular(100)),
+                  const BorderRadiusDirectional.all(Radius.circular(100)),
                   border: Border.all(width: 4, color: borderColor)),
               duration: const Duration(seconds: 1),
               curve: Curves.easeInOutCirc,
@@ -519,15 +700,15 @@ class _MyProgressBarState extends State<MyProgressBar> {
                       totalSteps: 100,
                       currentStep: !loadingHome
                           ? int.parse((((_homeModel!.teamSales)! / 100000) *
-                                          100)
-                                      .round()
-                                      .toString()) >=
-                                  100
-                              ? 100
-                              : int.parse(
-                                  (((_homeModel!.teamSales)! / 100000) * 100)
-                                      .round()
-                                      .toString())
+                          100)
+                          .round()
+                          .toString()) >=
+                          100
+                          ? 100
+                          : int.parse(
+                          (((_homeModel!.teamSales)! / 100000) * 100)
+                              .round()
+                              .toString())
                           : 0,
                       size: 15,
                       padding: 0,
@@ -575,7 +756,7 @@ class _MyProgressBarState extends State<MyProgressBar> {
           Positioned(
               bottom: 10,
               child: Text(
-                "Your Sales: ${_homeModel != null ? _homeModel!.teamSales.toString() : ""} RM",
+                "Your Sales: RM ${_homeModel != null ? _homeModel!.teamSales.toString() : ""}",
                 style: const TextStyle(
                     color: AppColors.backgroundColor,
                     fontWeight: FontWeight.bold,
