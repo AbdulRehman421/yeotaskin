@@ -230,154 +230,182 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
     return Scaffold(
       body: !salesLoading
           ? DefaultTabController(
-              length: 3,
-              child: NestedScrollView(
-                headerSliverBuilder:
-                    (BuildContext context, bool innerBoxIsScrolled) {
-                  return <Widget>[
-                    SliverAppBar(
-                      automaticallyImplyLeading: false,
-                      pinned: false,
-                      expandedHeight: 300,
-                      title: const Center(
-                        child: Text(
-                          "Leaderboard",
-                          style: TextStyle(
-                            fontFamily: AppFonts.palatino,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                          ),
-                        ),
-                      ),
-                      bottom: PreferredSize(
-                          preferredSize: const Size.fromHeight(300),
-                          child: currentTab == 0
-                              ? agentSalesList.isNotEmpty
-                                  ? topWidget(agentSalesList)
-                                  : const Center(
-                                      child: Text(
-                                        "Nothing found!",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: AppFonts.palatino,
-                                          fontSize: 18,
-                                        ),
-                                      ),
-                                    )
-                              : currentTab == 1
-                                  ? teamSalesList.isNotEmpty
-                                      ? topWidget(teamSalesList)
-                                      : const Center(
-                                          child: Text(
-                                            "Nothing found!",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: AppFonts.palatino,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        )
-                                  : teamSalesList.isNotEmpty
-                                      ? topWidget(count)
-                                      : const Center(
-                                          child: Text(
-                                            "Nothing found!",
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontFamily: AppFonts.palatino,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        )),
+        length: 4, // Updated length to 4
+        child: NestedScrollView(
+          headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+            return <Widget>[
+              SliverAppBar(
+                automaticallyImplyLeading: false,
+                pinned: false,
+                expandedHeight: 300,
+                title: const Center(
+                  child: Text(
+                    "Leaderboard",
+                    style: TextStyle(
+                      fontFamily: 'Palatino', // Updated to string if AppFonts.palatino is not defined
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
                     ),
-                    SliverPersistentHeader(
-                      delegate: MySliverPersistentHeaderDelegate(
-                        TabBar(
-                          unselectedLabelColor:
-                              AppColors.theme.withOpacity(0.5),
-                          tabs: const [
-                            Tab(
-                              icon: Icon(Icons.person_2),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Individual',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppFonts.palatino,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Tab(
-                              icon: Icon(Icons.group),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Team',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppFonts.palatino,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Tab(
-                              icon: Icon(Icons.group),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    'Referral',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontFamily: AppFonts.palatino,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
+                  ),
+                ),
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(300),
+                  child: currentTab == 0
+                      ? agentSalesList.isNotEmpty
+                      ? topWidget(agentSalesList)
+                      : const Center(
+                    child: Text(
+                      "Nothing found!",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Palatino',
+                        fontSize: 18,
+                      ),
+                    ),
+                  )
+                      : currentTab == 1
+                      ? teamSalesList.isNotEmpty
+                      ? topWidget(teamSalesList)
+                      : const Center(
+                    child: Text(
+                      "Nothing found!",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Palatino',
+                        fontSize: 18,
+                      ),
+                    ),
+                  )
+                      : currentTab == 2
+                      ? agentSalesList.isNotEmpty
+                      ? topWidget(agentSalesList)
+                      : const Center(
+                    child: Text(
+                      "Nothing found!",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Palatino',
+                        fontSize: 18,
+                      ),
+                    ),
+                  )
+                      : count.isNotEmpty
+                      ? topWidget(count)
+                      : const Center(
+                    child: Text(
+                      "Nothing found!",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Palatino',
+                        fontSize: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SliverPersistentHeader(
+                delegate: MySliverPersistentHeaderDelegate(
+                  TabBar(
+                    unselectedLabelColor: Colors.grey.withOpacity(0.5),
+                    tabs: const [
+                      Tab(
+                        icon: Icon(Icons.person),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Individual',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Palatino',
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
-                          onTap: (value) {
-                            currentTab = value;
-                            setState(() {});
-                          },
                         ),
                       ),
-                      pinned: false,
-                    ),
-                  ];
-                },
-                body: TabBarView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    LeaderboardList(
-                        data: agentSalesList.isNotEmpty ? agentSalesList : []),
-                    LeaderboardList(
-                        data: teamSalesList.isNotEmpty ? teamSalesList : []),
-                    LeaderboardList(data: count.isNotEmpty ? count : []),
-                  ],
+                      Tab(
+                        icon: Icon(Icons.group),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Team',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Palatino',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        icon: Icon(Icons.group),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Team(Batch)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Palatino',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Tab(
+                        icon: Icon(Icons.group),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Referral',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontFamily: 'Palatino',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onTap: (value) {
+                      setState(() {
+                        currentTab = value;
+                      });
+                    },
+                  ),
                 ),
+                pinned: false,
               ),
-            )
+            ];
+          },
+          body: TabBarView(
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              LeaderboardList(data: agentSalesList.isNotEmpty ? agentSalesList : []),
+              LeaderboardList(data: teamSalesList.isNotEmpty ? teamSalesList : []),
+              LeaderboardList(data: agentSalesList.isNotEmpty ? agentSalesList : []),
+              LeaderboardList(data: count.isNotEmpty ? count : []),
+            ],
+          ),
+        ),
+      )
           : const Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primaryColor,
-              ),
-            ),
+        child: CircularProgressIndicator(
+          color: Colors.blue, // Update to your AppColors.primaryColor
+        ),
+      ),
     );
   }
-
   Widget topWidget(List<dynamic> salesList) {
     return Column(
       children: [

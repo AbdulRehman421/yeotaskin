@@ -29,8 +29,7 @@ class _DashBoardState extends State<DashBoard>
   HomeModel? _homeModel;
   ProfileModel profile = UserProfileManager().profile;
   bool loadingHome = false;
-  List upline = [];
-  List names = [];
+
 
   void setLoading(bool status) {
     setState(() {
@@ -38,8 +37,10 @@ class _DashBoardState extends State<DashBoard>
     });
   }
 
+
   @override
   bool get wantKeepAlive => true;
+
 
   Future<void> loadHome() async {
     setLoading(true);
@@ -65,6 +66,37 @@ class _DashBoardState extends State<DashBoard>
     setLoading(false);
   }
 
+
+
+  List<String> names = [];
+  List<Map<String, dynamic>> agentSalesList = [];
+  List<Map<String, dynamic>> upline = [];
+  bool isLoading = false;
+
+  Future<void> getAgentSales() async {
+    try {
+      final response = await http.get(Uri.parse("${URLs.baseURL}${URLs.agentSaleURL}"));
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData['success'] == true && responseData['data'] != null) {
+          final data = responseData['data'] as List<dynamic>;
+          agentSalesList = data
+              .where((agent) => names.contains(agent['name']))
+              .map((e) => e as Map<String, dynamic>)
+              .toList();
+          agentSalesList.sort((a, b) => int.parse(b['total_sales'].toString())
+              .compareTo(int.parse(a['total_sales'].toString())));
+        } else {
+          debugPrint("getAgentSales(): else Error");
+        }
+      } else {
+        debugPrint("getAgentSales(): else Error");
+      }
+    } catch (e) {
+      debugPrint("getAgentSales(): ${e.toString()}");
+    }
+  }
+
   Future<void> compareUplineId() async {
     String? token = await UserProfileManager().getUserToken();
     try {
@@ -73,18 +105,15 @@ class _DashBoardState extends State<DashBoard>
           headers: {"Authorization": "Bearer $token"});
 
       if (response.statusCode == 200) {
-        debugPrint("compareUplineId: ${jsonDecode(response.body)}");
-
-        upline = jsonDecode(response.body)['data'];
-        setState(() {});
-        print(upline.where((element) =>
-            element['upline'].toString() == profile.id.toString()));
-        for (var i = 0; i < upline.length; i++) {
-          if (profile.id.toString() == upline[i]['upline'].toString()) {
-            names.add(upline[i]['name']);
-          }
-        }
-        print(names);
+        final responseData = jsonDecode(response.body);
+        upline = (responseData['data'] as List<dynamic>)
+            .map((e) => e as Map<String, dynamic>)
+            .toList();
+        names = upline
+            .where((element) => element['upline'].toString() == profile.id.toString())
+            .map((element) => element['name'].toString())
+            .toList();
+        print('upline names: $names');
       } else {
         debugPrint("compareUplineId(): error");
       }
@@ -93,12 +122,27 @@ class _DashBoardState extends State<DashBoard>
     }
   }
 
+  Future<void> fetchUplineAndSales() async {
+    setState(() {
+      isLoading = true;
+    });
+    await compareUplineId();
+    await getAgentSales();
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+
   bool loadingTopUpWithdraw = false;
+
   void setTopUpWithdrawLoading(bool status) {
     setState(() {
       loadingTopUpWithdraw = status;
     });
   }
+
+
 
   Future<void> topUpWithdraw(int type, int amount) async {
     if (amount == 0) {
@@ -139,8 +183,8 @@ class _DashBoardState extends State<DashBoard>
   void initState() {
     // TODO: implement initState
     super.initState();
-
     loadHome();
+    fetchUplineAndSales();
   }
 
   final TextEditingController _topUpController = TextEditingController();
@@ -148,8 +192,10 @@ class _DashBoardState extends State<DashBoard>
   final double tableRowHeight = 50;
 
   final _formKey = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
+    fetchUplineAndSales();
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       body: SafeArea(
@@ -463,6 +509,7 @@ class _DashBoardState extends State<DashBoard>
                                                                     TextStyle(
                                                                   fontSize: 16,
                                                                   fontWeight:
+
                                                                       FontWeight
                                                                           .bold,
                                                                   fontFamily:
@@ -940,157 +987,172 @@ class _DashBoardState extends State<DashBoard>
                                     ),
                                   ),
                                 ),
-                          ListView.builder(
-                              itemCount: names.length,
-                              physics: NeverScrollableScrollPhysics(),
-                              shrinkWrap: true,
-                              itemBuilder: (context, index) {
-                                return Table(
-                                  columnWidths: const {
-                                    0: FixedColumnWidth(40),
-                                    1: FixedColumnWidth(0.5),
-                                    2: FlexColumnWidth(5),
-                                    3: FlexColumnWidth(2)
-                                  },
-                                  children: [
-                                    index == 0
-                                        ? TableRow(
-                                            decoration: const BoxDecoration(
-                                                color: AppColors.theme,
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        top: Radius.circular(
-                                                            8))),
-                                            children: [
-                                                SizedBox(),
-                                                SizedBox(),
-                                                SizedBox(
-                                                  height: tableRowHeight,
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Flexible(
-                                                        child: Text(
-                                                          "Downline",
-                                                          style:
-                                                              const TextStyle(
-                                                            fontWeight:
-                                                                FontWeight.w900,
-                                                            fontSize: 16,
-                                                            color: AppColors
-                                                                .backgroundColor,
-                                                            fontFamily: AppFonts
-                                                                .palatino,
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ])
-                                        : TableRow(
-                                            decoration: BoxDecoration(
-                                              color: index.isEven
-                                                  ? AppColors.accent
-                                                      .withOpacity(0.4)
-                                                  : AppColors.background,
-                                              borderRadius: (index ==
-                                                      names.length - 1)
-                                                  ? const BorderRadius.vertical(
-                                                      bottom:
-                                                          Radius.circular(8))
-                                                  : null,
-                                            ),
-                                            children: [
-                                                SizedBox(
-                                                  height: tableRowHeight,
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    mainAxisSize:
-                                                        MainAxisSize.max,
-                                                    children: [
-                                                      Text(
-                                                        (index).toString(),
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 16,
-                                                          fontFamily:
-                                                              AppFonts.optima,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  height: tableRowHeight,
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      VerticalDivider(
-                                                        width: 0.5,
-                                                        thickness: 0.5,
-                                                        color: AppColors.accent
-                                                            .withOpacity(0.8),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  height: tableRowHeight,
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.start,
-                                                    children: [
-                                                      const SizedBox(
-                                                        width: 4,
-                                                      ),
-                                                      Flexible(
-                                                        child: Text(
-                                                          (names[index]
-                                                                  .toString()) ??
-                                                              '',
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style:
-                                                              const TextStyle(
-                                                            fontSize: 16,
-                                                            fontFamily: AppFonts
-                                                                .palatino,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                // SizedBox(
-                                                //   height: 40,
-                                                //   child: Row(
-                                                //     mainAxisAlignment:
-                                                //         MainAxisAlignment.start,
-                                                //     children: [
-                                                //       Text(
-                                                //         ("") ?? '',
-                                                //         overflow:
-                                                //             TextOverflow.ellipsis,
-                                                //         style: const TextStyle(
-                                                //           fontWeight: FontWeight.bold,
-                                                //           fontFamily: AppFonts.optima,
-                                                //           fontSize: 16,
-                                                //         ),
-                                                //       ),
-                                                //     ],
-                                                //   ),
-                                                // ),
-                                              ]),
-                                  ],
-                                );
-                              })
+      ListView.builder(
+        itemCount: agentSalesList.length,
+        physics: NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemBuilder: (context, index) {
+          final agent = agentSalesList[index];
+          return Table(
+            columnWidths: const {
+              0: FixedColumnWidth(40),
+              1: FixedColumnWidth(0.5),
+              2: FlexColumnWidth(5),
+              3: FlexColumnWidth(2)
+            },
+            children: [
+              index == 0
+                  ? TableRow(
+                  decoration: const BoxDecoration(
+                      color: AppColors.theme,
+                      borderRadius: BorderRadius.vertical(top: Radius.circular(8))),
+                  children: [
+                    SizedBox(),
+                    SizedBox(),
+                    SizedBox(
+                      height: tableRowHeight,
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              "Downline",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                color: AppColors.backgroundColor,
+                                fontFamily: AppFonts.palatino,
+                              ),
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              "Level",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                color: AppColors.backgroundColor,
+                                fontFamily: AppFonts.palatino,
+                              ),
+                            ),
+                          ),
+                          Flexible(
+                            child: Text(
+                              "Sales",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                                color: AppColors.backgroundColor,
+                                fontFamily: AppFonts.palatino,
+                              ),
+                            ),
+                          ),
+                        ],
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      ),
+                    ),
+                  ])
+                  : TableRow(
+                decoration: BoxDecoration(
+                  color: index.isEven
+                      ? AppColors.accent.withOpacity(0.4)
+                      : AppColors.background,
+                  borderRadius: (index == agentSalesList.length - 1)
+                      ? const BorderRadius.vertical(bottom: Radius.circular(8))
+                      : null,
+                ),
+                children: [
+                  SizedBox(
+                    height: tableRowHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        Text(
+                          (index + 1).toString(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            fontFamily: AppFonts.optima,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: tableRowHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        VerticalDivider(
+                          width: 0.5,
+                          thickness: 0.5,
+                          color: AppColors.accent.withOpacity(0.8),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: tableRowHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            names[index],
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: AppFonts.palatino,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: tableRowHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            agent['level']?.toString() ?? '0',
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontFamily: AppFonts.palatino,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: tableRowHeight,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Text(
+                          agent['total_sales']?.toString() ?? '0',
+                          overflow: TextOverflow.ellipsis,
+
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontFamily: AppFonts.palatino,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
                         ],
                       ),
                     )
@@ -1135,6 +1197,7 @@ class _DashBoardState extends State<DashBoard>
   }
 
   List availableStock = [];
+
   Future<void> getAvailableStock() async {
     availableStock.clear();
     ProfileModel profile = UserProfileManager().profile;

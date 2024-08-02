@@ -8,7 +8,6 @@ import 'package:yeotaskin/utilities/app_colors.dart';
 import 'package:yeotaskin/utilities/app_fonts.dart';
 import 'package:yeotaskin/view/auth/forgot%20password/forgot_password_screen.dart';
 import 'package:yeotaskin/view/home_screen.dart';
-import 'package:yeotaskin/view/product%20screen/product_screen.dart';
 import 'package:http/http.dart' as http;
 import '../../utilities/image_utils.dart';
 import '../../utilities/snackbar_utils.dart';

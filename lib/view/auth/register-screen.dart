@@ -404,7 +404,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               TextFormField(
                                 controller: referralController,
                                 decoration: InputDecoration(
-                                  hintText: "Referral (Optional)",
+                                  hintText: "Referral",
                                   border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(10),
                                       borderSide: BorderSide.none),
@@ -416,6 +416,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     color: Colors.black38,
                                   ),
                                 ),
+                                validator: (value) {
+                                  if (value!.isEmpty) {
+                                    return "Please enter referal";
+                                  }
+                                  return null;
+                                },
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
@@ -544,6 +550,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       request.fields['ic_number'] = icNumberController.text;
       request.fields['password'] = passwordController.text;
       request.fields['level'] = levelController.text;
+      request.fields['referal'] = referralController.text;
       request.files
           .add(await http.MultipartFile.fromPath('attachment', documentPath));
 
@@ -567,6 +574,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         levelController.clear();
         icNumberController.clear();
         genderController.clear();
+        referralController.clear();
         navigateLoginScreen();
         SnackBarUtils.show(
             title: "Account Created Successfully", isError: false);
