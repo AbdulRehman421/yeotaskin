@@ -101,7 +101,7 @@ class _DashBoardState extends State<DashBoard>
     String? token = await UserProfileManager().getUserToken();
     try {
       final response = await http.get(
-          Uri.parse("${URLs.baseURL}${URLs.referralURL}"),
+          Uri.parse("https://admin.yeotaskin.com/api/downline"),
           headers: {"Authorization": "Bearer $token"});
 
       if (response.statusCode == 200) {

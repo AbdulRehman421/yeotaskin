@@ -31,6 +31,7 @@ class URLs {
 
   //get agent and team sales
   static const String agentSaleURL = "api/agent_sales";
+  static const String teamSaleBatchUrl = "api/team_sales_batch";
   static const String teamSalesURL = "api/team_sales";
   static const String referralURL = "api/downline";
 

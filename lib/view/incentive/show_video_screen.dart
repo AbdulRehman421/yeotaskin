@@ -293,7 +293,7 @@ class _VideoScreenState extends State<VideoScreen> {
             )
                 : const CircularProgressIndicator(),
           ),
-          if (homeModel!.teamSales! < 40000)
+          if (homeModel!.teamSales! < 40000 || teamSalesList.length <= 5)
             Positioned.fill(
               child: GestureDetector(
                 onTap: () {},
@@ -457,6 +457,7 @@ class _MyProgressBarNewState extends State<MyProgressBarNew> {
   bool loadingHome = false;
   Color borderColor = AppColors.primaryColor;
   Timer? _timer = Timer(const Duration(milliseconds: 500), () {});
+  List teamSalesList = [];
 
   void setLoading(bool status) {
     if (mounted) {
@@ -518,6 +519,7 @@ class _MyProgressBarNewState extends State<MyProgressBarNew> {
       levelReached[0] = _homeModel!.teamSales! >= 45000 ? false : false;
       levelReached[1] = _homeModel!.teamSales! >= 65000 ? false : false;
       levelReached[2] = _homeModel!.teamSales! >= 100000 ? false : false;
+
     }
 
     return Column(

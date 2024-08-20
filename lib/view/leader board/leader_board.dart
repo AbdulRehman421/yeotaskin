@@ -23,6 +23,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
   int currentTab = 0;
   List agentSalesList = [];
   List teamSalesList = [];
+  List teamSalesBatchList = [];
   List referral = [];
   List rawreferral = [];
   List count = [];
@@ -78,6 +79,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
 
           // Proceed to fetch team sales data
           getTeamSales();
+          getTeamBatchSales();
         } else {
           debugPrint("getAgentSales(): Error - Success is not true");
           // Handle error case where success is not true
@@ -113,6 +115,35 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
               Map<String, dynamic> temp = teamSalesList[i];
               teamSalesList[i] = teamSalesList[j];
               teamSalesList[j] = temp;
+            }
+          }
+        }
+        await getReffreal();
+      } else {
+        debugPrint("getTeamSales: else Error");
+      }
+    } catch (e) {
+      debugPrint("getTeamSales: ${e.toString()}");
+    }
+  }
+  Future<void> getTeamBatchSales() async {
+    try {
+      final response =
+          await http.get(Uri.parse("${URLs.baseURL}${URLs.teamSaleBatchUrl}"));
+
+      if (response.statusCode == 200 &&
+          jsonDecode(response.body)['success'] == true) {
+        if (jsonDecode(response.body)['data'] != null) {
+          teamSalesBatchList = jsonDecode(response.body)['data'];
+        }
+        debugPrint("TeamSale: ${jsonDecode(response.body)}");
+        for (int i = 0; i < teamSalesBatchList.length - 1; i++) {
+          for (int j = i + 1; j < teamSalesBatchList.length; j++) {
+            if (int.parse(teamSalesBatchList[i]['total_sales'].toString()) <
+                int.parse(teamSalesBatchList[j]['total_sales'].toString())) {
+              Map<String, dynamic> temp = teamSalesBatchList[i];
+              teamSalesBatchList[i] = teamSalesBatchList[j];
+              teamSalesBatchList[j] = temp;
             }
           }
         }
@@ -277,8 +308,8 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
                     ),
                   )
                       : currentTab == 2
-                      ? agentSalesList.isNotEmpty
-                      ? topWidget(agentSalesList)
+                      ? teamSalesBatchList.isNotEmpty
+                      ? topWidget(teamSalesBatchList)
                       : const Center(
                     child: Text(
                       "Nothing found!",
@@ -393,7 +424,7 @@ class _LeaderBoardScreenState extends State<LeaderBoardScreen>
             children: [
               LeaderboardList(data: agentSalesList.isNotEmpty ? agentSalesList : []),
               LeaderboardList(data: teamSalesList.isNotEmpty ? teamSalesList : []),
-              LeaderboardList(data: agentSalesList.isNotEmpty ? agentSalesList : []),
+              LeaderboardList(data: teamSalesBatchList.isNotEmpty ? teamSalesBatchList : []),
               LeaderboardList(data: count.isNotEmpty ? count : []),
             ],
           ),
